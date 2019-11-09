@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" name="com.wethinkcode.fix_me.AppTest" time="0.045" tests="1" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" name="com.wethinkcode.fix_me.AppTest" time="0.032" tests="1" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="13"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
-    <property name="java.class.path" value="/homes/eonwe/Desktop/fix_me/fix_meRouter/target/test-classes:/homes/eonwe/Desktop/fix_me/fix_meRouter/target/classes:/homes/eonwe/.m2/repository/junit/junit/4.11/junit-4.11.jar:/homes/eonwe/.m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar:"/>
+    <property name="java.class.path" value="/homes/eonwe/Documents/fix_me/fix_me/fix_meRouter/target/test-classes:/homes/eonwe/Documents/fix_me/fix_me/fix_meRouter/target/classes:/homes/eonwe/.m2/repository/junit/junit/4.11/junit-4.11.jar:/homes/eonwe/.m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar:"/>
     <property name="java.vm.vendor" value="Oracle Corporation"/>
     <property name="sun.arch.data.model" value="64"/>
     <property name="java.vendor.url" value="https://java.oracle.com/"/>
@@ -12,10 +12,10 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="ZA"/>
     <property name="sun.boot.library.path" value="/Library/Java/JavaVirtualMachines/jdk-13.jdk/Contents/Home/lib"/>
-    <property name="sun.java.command" value="/homes/eonwe/Desktop/fix_me/fix_meRouter/target/surefire/surefirebooter13372349248510853376.jar /homes/eonwe/Desktop/fix_me/fix_meRouter/target/surefire 2019-11-08T12-20-02_026-jvmRun1 surefire12087428272641325613tmp surefire_01546417394906374575tmp"/>
+    <property name="sun.java.command" value="/homes/eonwe/Documents/fix_me/fix_me/fix_meRouter/target/surefire/surefirebooter14253865363781315751.jar /homes/eonwe/Documents/fix_me/fix_me/fix_meRouter/target/surefire 2019-11-09T11-18-13_539-jvmRun1 surefire14318921021913936426tmp surefire_09764732290028894863tmp"/>
     <property name="http.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="jdk.debug" value="release"/>
-    <property name="surefire.test.class.path" value="/homes/eonwe/Desktop/fix_me/fix_meRouter/target/test-classes:/homes/eonwe/Desktop/fix_me/fix_meRouter/target/classes:/homes/eonwe/.m2/repository/junit/junit/4.11/junit-4.11.jar:/homes/eonwe/.m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar:"/>
+    <property name="surefire.test.class.path" value="/homes/eonwe/Documents/fix_me/fix_me/fix_meRouter/target/test-classes:/homes/eonwe/Documents/fix_me/fix_me/fix_meRouter/target/classes:/homes/eonwe/.m2/repository/junit/junit/4.11/junit-4.11.jar:/homes/eonwe/.m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar:"/>
     <property name="sun.cpu.endian" value="little"/>
     <property name="user.home" value="/homes/eonwe"/>
     <property name="user.language" value="en"/>
@@ -23,12 +23,12 @@
     <property name="java.version.date" value="2019-09-17"/>
     <property name="java.home" value="/Library/Java/JavaVirtualMachines/jdk-13.jdk/Contents/Home"/>
     <property name="file.separator" value="/"/>
-    <property name="basedir" value="/homes/eonwe/Desktop/fix_me/fix_meRouter"/>
+    <property name="basedir" value="/homes/eonwe/Documents/fix_me/fix_me/fix_meRouter"/>
     <property name="java.vm.compressedOopsMode" value="Zero based"/>
     <property name="line.separator" value="&#10;"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
-    <property name="surefire.real.class.path" value="/homes/eonwe/Desktop/fix_me/fix_meRouter/target/surefire/surefirebooter13372349248510853376.jar"/>
+    <property name="surefire.real.class.path" value="/homes/eonwe/Documents/fix_me/fix_me/fix_meRouter/target/surefire/surefirebooter14253865363781315751.jar"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="java.runtime.version" value="13+33"/>
@@ -42,7 +42,7 @@
     <property name="java.vendor.url.bug" value="https://bugreport.java.com/bugreport/"/>
     <property name="java.io.tmpdir" value="/var/folders/zz/zyxvpxvq6csfxvn_n0000mcc000533/T/"/>
     <property name="java.version" value="13"/>
-    <property name="user.dir" value="/homes/eonwe/Desktop/fix_me/fix_meRouter"/>
+    <property name="user.dir" value="/homes/eonwe/Documents/fix_me/fix_me/fix_meRouter"/>
     <property name="os.arch" value="x86_64"/>
     <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
     <property name="java.library.path" value="/homes/eonwe/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:."/>
@@ -53,5 +53,5 @@
     <property name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="java.class.version" value="57.0"/>
   </properties>
-  <testcase name="shouldAnswerWithTrue" classname="com.wethinkcode.fix_me.AppTest" time="0.001"/>
+  <testcase name="shouldAnswerWithTrue" classname="com.wethinkcode.fix_me.AppTest" time="0.002"/>
 </testsuite>
