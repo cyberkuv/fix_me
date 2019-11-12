@@ -54,6 +54,7 @@ public class Router {
                             System.out.println("___marketId___: " + String.format("%06d", market) + " | ___Market Connected___@" + socketChannel.getLocalAddress());
                             break ;
                     }
+                    System.out.println("");
                 }
                 if(selectedKey.isReadable()) {
                     SocketChannel socketChannel = (SocketChannel)selectedKey.channel();
