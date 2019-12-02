@@ -1,7 +1,6 @@
 package com.wethinkcode.fix_me;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -11,74 +10,91 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.CharBuffer;
 
 public class Broker {
-    private static BufferedReader input = null;
-    public static void main( String[] args ) throws Exception {
-        System.out.println("___Broker Sends Her greetings___");
-        InetSocketAddress socketAddress = new InetSocketAddress(InetAddress.getByName("localhost"), 5000);
-        Selector selector = Selector.open();
-        SocketChannel socketChannel = SocketChannel.open();
-        socketChannel.configureBlocking(false);
-        socketChannel.connect(socketAddress);
-        socketChannel.register(selector, SelectionKey.OP_CONNECT | SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-        input = new BufferedReader(new InputStreamReader(System.in));
-        while(true) {
-            if(selector.select() > 0) {
-                Boolean doneStatus = processReadySet(selector.selectedKeys());
-                if(doneStatus) {
-                    break ;
+    static BufferedReader userInputReader = null;
+
+    public static boolean processReadySet(Set readySet) throws Exception {
+        Iterator iterator = readySet.iterator();
+        while (iterator.hasNext()) {
+            SelectionKey key = (SelectionKey) iterator.next();
+            iterator.remove();
+            if (key.isConnectable()) {
+                boolean connected = processConnect(key);
+                if (!connected) {
+                    return true;
                 }
             }
-        }
-        socketChannel.close();
-    }
+            if (key.isReadable()) {
+                String msg = processRead(key);
+                if (msg.length() > 0) {
+                    System.out.println("[Server]: " + msg);
+                    SocketChannel sChannel = (SocketChannel) key.channel();
+                    sChannel.register(key.selector(), SelectionKey.OP_WRITE);
+                }
 
-    public static Boolean processReadySet(Set readySet) throws Exception {
-        SelectionKey key = null;
-        Iterator iterator = null;
-        iterator = readySet.iterator();
-        while(iterator.hasNext()) {
-            key = (SelectionKey)iterator.next();
-            iterator.remove();
-        }
-        if(key.isConnectable()) {
-            Boolean connected = processConnect(key);
-            if(!connected) {
-                return true;
             }
-        }
-        if(key.isReadable()) {
-            SocketChannel socketChannel = (SocketChannel)key.channel();
-            ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
-            socketChannel.read(byteBuffer);
-            String result = new String(byteBuffer.array()).trim();
-            System.out.println("___Server Responded___: " + result + "___Message Length___: " + result.length());
-        }
-        if(key.isWritable()) {
-            System.out.print("___Enter message___: (type 'exit' to stop): ");
-            String msg = input.readLine();
-            if(msg.equalsIgnoreCase("exit")) {
-                return true;
+            if (key.isWritable()) {
+                System.out.print("[input>](Bye to quit):");
+                String msg = userInputReader.readLine();
+
+                if (msg.equalsIgnoreCase("bye")) {
+                    return true;
+                }
+                SocketChannel sChannel = (SocketChannel) key.channel();
+                ByteBuffer buffer = ByteBuffer.wrap(msg.getBytes());
+                sChannel.write(buffer);
+
+                sChannel.register(key.selector(), SelectionKey.OP_READ);
             }
-            SocketChannel socketChannel = (SocketChannel)key.channel();
-            ByteBuffer byteBuffer = ByteBuffer.wrap(msg.getBytes());
-            socketChannel.write(byteBuffer);
         }
         return false;
     }
 
-    public static Boolean processConnect(SelectionKey key) {
-        SocketChannel socketChannel = (SocketChannel)key.channel();
-        try {
-            while(socketChannel.isConnectionPending()) {
-                socketChannel.finishConnect();
-            }
-        } catch (IOException e) {
-            key.cancel();
-            e.printStackTrace();
-            return false;
+    public static boolean processConnect(SelectionKey key) throws Exception {
+        SocketChannel channel = (SocketChannel) key.channel();
+        while (channel.isConnectionPending()) {
+            channel.finishConnect();
         }
         return true;
+    }
+
+    public static String processRead(SelectionKey key) throws Exception {
+        SocketChannel sChannel = (SocketChannel) key.channel();
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        sChannel.read(buffer);
+        buffer.flip();
+        Charset charset = Charset.forName("UTF-8");
+        CharsetDecoder decoder = charset.newDecoder();
+        CharBuffer charBuffer = decoder.decode(buffer);
+        String msg = charBuffer.toString();
+        return msg;
+    }
+
+    public static void main(String[] args) throws Exception {
+        InetAddress serverIPAddress = InetAddress.getByName("localhost");
+        int port = 5000;
+        InetSocketAddress serverAddress = new InetSocketAddress(serverIPAddress, port);
+        Selector selector = Selector.open();
+        SocketChannel channel = SocketChannel.open();
+        channel.configureBlocking(false);
+        channel.connect(serverAddress);
+        int operations = SelectionKey.OP_CONNECT | SelectionKey.OP_READ;
+        channel.register(selector, operations);
+
+        userInputReader = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println(userInputReader);
+        while (true) {
+            if (selector.select() > 0) {
+                boolean doneStatus = processReadySet(selector.selectedKeys());
+                if (doneStatus) {
+                    break;
+                }
+            }
+        }
+        channel.close();
     }
 }

@@ -1,116 +1,120 @@
 package com.wethinkcode.fix_me;
 
-import java.io.IOException;
+import java.nio.channels.Selector;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import java.util.Random;
+import java.util.Set;
 
-public class Router {
-    public static void main(String[] args) throws IOException {
-        System.out.println("___Router Awaits Your Every Command___");
+public class Router implements Runnable {
+    int port;
 
-        Selector selector = Selector.open();
-        // Array of Ports
-        int[] ports = new int[] { 5000, 5001 };
-        // Random 6 digit value
-        Random random = new Random();
-        int broker = random.nextInt(999999);
-        int market = random.nextInt(888888);
-        // Looping through each port and binding it to the serversocketchannel
-        for(int port : ports) {
+    @Override
+    public void run() {
+        Start();
+    }
+
+    public Router(int port) {
+        this.port = port;
+    }
+
+    private void Start() {
+        try {
+            Selector selector = Selector.open();
             ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.configureBlocking(false);
-            serverSocketChannel.socket().bind(new InetSocketAddress(port));
+            serverSocketChannel.socket().bind(new InetSocketAddress("localhost", this.port));
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-        }
-        // ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
-        // serverSocketChannel.configureBlocking(false);
-        // InetAddress ip = InetAddress.getByName("localhost");
-        // serverSocketChannel.bind(new InetSocketAddress(ip, 5000));
-        // serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+            System.out.println("Router Running On: " + serverSocketChannel.getLocalAddress());
 
-        //Selection Key Handling
-        while(true) {
-            selector.select();
-
-            Iterator<SelectionKey> selectedKeys = selector.selectedKeys().iterator();
-            while(selectedKeys.hasNext()) {
-                SelectionKey selectedKey = selectedKeys.next();
-                if(selectedKey.isAcceptable()) {
-                    SocketChannel socketChannel = ((ServerSocketChannel)selectedKey.channel()).accept();
-                    socketChannel.configureBlocking(false);
-                    switch (socketChannel.socket().getLocalPort()) {
-                        case 5000:
-                            socketChannel.register(selector, SelectionKey.OP_READ);
-                            System.out.println("___brokerId___: " + String.format("%06d", broker) + " | ___Broker Connected___@" + socketChannel.getLocalAddress());
-                            break ;
-                        case 5001:
-                            socketChannel.register(selector, SelectionKey.OP_READ);
-                            System.out.println("___marketId___: " + String.format("%06d", market) + " | ___Market Connected___@" + socketChannel.getLocalAddress());
-                            break ;
-                    }
-                    System.out.println("");
+            while (true) {
+                if (selector.select() <= 0) {
+                    continue;
                 }
-                if(selectedKey.isReadable()) {
-                    SocketChannel socketChannel = (SocketChannel)selectedKey.channel();
-                    ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
-                    socketChannel.read(byteBuffer);
-                    String result = new String(byteBuffer.array()).trim();
-                    switch(socketChannel.socket().getLocalPort()) {
-                        case 5000:
-                            System.out.println("___Broker@" + String.format("%06d", broker) + " : "  + result);
-                            if(result.length() <= 0) {
-                                socketChannel.close();
-                                System.out.println("___Connection Closed___");
-                                System.out.println("___Server Awaiting New Connection___");
+                processReadySet(selector.selectedKeys());
+            }
+        } catch (Exception e) {
+            System.out.println("Exception error " + e.getMessage());
+        }
+    }
+
+    public void processReadySet(Set readySet) throws Exception {
+        Iterator iterator = readySet.iterator();
+        while (iterator.hasNext()) {
+            SelectionKey key = (SelectionKey) iterator.next();
+            iterator.remove();
+            if (key.isAcceptable()) {
+                ServerSocketChannel ssChannel = (ServerSocketChannel) key.channel();
+                SocketChannel sChannel = (SocketChannel) ssChannel.accept();
+                sChannel.configureBlocking(false);
+                sChannel.register(key.selector(), SelectionKey.OP_READ);
+
+                boolean isBroker = true;
+
+                if (port == 5001)
+                    isBroker = false;
+                MessageModel msgModel = new MessageModel(sChannel, isBroker);
+                MessageHandler.getMessageList().add(msgModel);
+                System.out.printf("Client %s Conncted as %d\n", isBroker, msgModel.getId());
+                sChannel.write(ByteBuffer.wrap(("ID@" + msgModel.getId()).getBytes()));
+            }
+            if (key.isReadable()) {
+                String msg = processRead(key).trim();
+
+                if (msg.length() > 0) {
+                    MessageModel keyMM = null;
+                    SocketChannel sc = (SocketChannel) key.channel();
+
+                    for (MessageModel m : MessageHandler.getMessageList()) {
+                        if (m.isSamePort(sc)) {
+                            keyMM = m;
+                        }
+                    }
+
+                    System.out.printf("[%s on %s]: (%s)\n", keyMM.getId(), port, msg);
+
+                    if (port == 5000) {
+                        MessageModel sendie = null;
+                        int idToSend = Integer.parseInt(msg.split(" ")[0]);
+
+                        for (MessageModel m : MessageHandler.getMessageList()) {
+                            if (m.getId() == idToSend) {
+                                sendie = m;
                             }
-                            break ;
-                        case 5001:
-                            System.out.println("___Market@" + String.format("%06d", market) + " : " + result);
-                            if(result.length() <= 0) {
-                                socketChannel.close();
-                                System.out.println("___Connection Closed___");
-                                System.out.println("___Server Awaiting New Connection___");
+                        }
+                        if (sendie == null) {
+                            sc.write(ByteBuffer.wrap(("Error...").getBytes()));
+                        } else {
+                            sendie.setMessageFeom(keyMM.getId());
+                            sendie.setMessage(msg);
+                            sendie.getSockectChannel().write(ByteBuffer.wrap(msg.getBytes()));
+                        }
+                    } else {
+                        for (MessageModel m : MessageHandler.getMessageList()) {
+                            if (keyMM.getMessageFrom() == m.getId() && keyMM.getMessage().length() > 0) {
+                                System.out.printf("Msg: %s - %s\n", keyMM.getMessage(), msg);
+                                m.getSockectChannel().write(ByteBuffer.wrap((msg + " ?? ").getBytes()));
+                                keyMM.setMessageFeom(0);
+                                keyMM.setMessage("");
                             }
-                            break ;
+                        }
                     }
                 }
             }
         }
+    }
 
-        // SelectionKey key = null;
-        // while(true) {
-        //     if(selector.select() <= 0)
-        //         continue ;
-        //     Set<SelectionKey> selectedKeys = selector.selectedKeys();
-        //     Iterator<SelectionKey> iterator = selectedKeys.iterator();
-        //     while(iterator.hasNext()) {
-        //         key = (SelectionKey)iterator.next();
-        //         iterator.remove();
-        //         if(key.isAcceptable()) {
-        //             SocketChannel socketChannel = serverSocketChannel.accept();
-        //             socketChannel.configureBlocking(false);
-        //             socketChannel.register(selector, SelectionKey.OP_READ);
-        //             System.out.println("___Connection Accepted___: " + socketChannel.getRemoteAddress());
-        //         }
-        //         if(key.isReadable()) {
-        //             SocketChannel socketChannel = (SocketChannel)key.channel();
-        //             ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
-        //             socketChannel.read(byteBuffer);
-        //             String result = new String(byteBuffer.array()).trim();
-        //             System.out.println("___Recieved Message___: " + result + ". ___Message Lenght___: " + result.length());
-        //             if(result.length() <= 0) {
-        //                 socketChannel.close();
-        //                 System.out.println("___Connection Closed___");
-        //                 System.out.println("___Server Awaiting New Connection___");
-        //             }
-        //         }
-        //     }
-        // }
+    public String processRead(SelectionKey key) throws Exception {
+        SocketChannel sChannel = (SocketChannel) key.channel();
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        int bytesCount = sChannel.read(buffer);
+        if (bytesCount > 0) {
+            buffer.flip();
+            return new String(buffer.array());
+        }
+        return "NoMessage";
     }
 }
